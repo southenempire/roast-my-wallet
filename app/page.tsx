@@ -3,21 +3,20 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2, Flame, Search, RefreshCw, Zap, Share2 } from 'lucide-react';
 
-// --- FAKE FEED FOR VISUALS ---
+// --- MIXED FEED FOR CROSS-CHAIN VIBES ---
 const LIVE_FEED = [
   { victim: "0x7a...89b1", roast: "Lost 5 ETH on a meme coin named after a vegetable." },
+  { victim: "So1a...Hk9z", roast: "Tried to buy a NFT but the network paused. Unlucky." },
   { victim: "0x3d...22a4", roast: "This wallet has the trading volume of a dead hamster." },
+  { victim: "Hg7L...9jKa", roast: "You paid more in failed tx fees than your portfolio is worth." },
   { victim: "0x9c...11f2", roast: "Gas fees paid: $5,000. Profit made: $3.50. Genius." },
-  { victim: "0x1b...99c3", roast: "You are the liquidity the whales have been waiting for." },
-  { victim: "0x5e...77d1", roast: "A savings account would have outperformed your portfolio." },
+  { victim: "Br4d...m3N1", roast: "Bridging back to Eth? Giving up already?" },
 ];
 
-// --- CUSTOM BURNING WALLET LOGO ---
 const CustomLogo = () => (
   <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[#ffce96] mx-auto mb-4 drop-shadow-[0_0_15px_rgba(255,206,150,0.6)]">
     <path d="M20 12V8H6C3.79086 8 2 9.79086 2 12V16C2 18.2091 3.79086 20 6 20H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
     <path d="M16 12H20C21.1046 12 22 12.8954 22 14V16C22 17.1046 21.1046 18 20 18H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    {/* Flames */}
     <path d="M11 7.5C11 7.5 9 5.5 9 3.5C9 1.5 10.5 0.5 11.5 0.5C12.5 0.5 14 1.5 14 3.5C14 5.5 11 7.5 11 7.5Z" fill="currentColor"/>
     <path d="M15.5 8.5C15.5 8.5 17 7 17 5.5C17 4 16 3 15.5 3C15 3 14 4 14 5.5C14 7 15.5 8.5 15.5 8.5Z" fill="currentColor"/>
   </svg>
@@ -51,7 +50,7 @@ export default function Home() {
       }
     } catch (err) {
       console.error(err);
-      setRoast("Server overloaded. Try again.");
+      setRoast("System overloaded. Try again.");
     } finally {
       setLoading(false);
     }
@@ -63,10 +62,8 @@ export default function Home() {
     setShake(false);
   }
 
-  // --- UPDATED SHARE LINK ---
   const shareOnTwitter = () => {
-    const text = encodeURIComponent(`I just got roasted by AI on Scroll! 💀\n\n"${roast}"\n\nCheck your wallet vibe here: 👇\n`);
-    // Your actual Vercel link:
+    const text = encodeURIComponent(`I just got roasted by AI! 💀\n\n"${roast}"\n\nCheck your wallet vibe here: 👇\n`);
     const url = encodeURIComponent("https://roast-my-wallet-rust.vercel.app/"); 
     window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
   };
@@ -113,28 +110,33 @@ export default function Home() {
 
       <div className="flex-1 flex flex-col items-center justify-center p-4 z-10 w-full max-w-2xl mx-auto mt-10">
         
-        {/* NEW LOGO & HEADER */}
+        {/* LOGO & HEADER */}
         <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <CustomLogo />
-          <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-[#ffce96] drop-shadow-[0_0_35px_rgba(255,206,150,0.4)] leading-[0.85]">
+          <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-[#ffce96] drop-shadow-[0_0_35px_rgba(255,206,150,0.4)] leading-[0.85]">
             Roast My<br/>Wallet
           </h1>
-          <p className="text-zinc-500 mt-4 text-lg md:text-xl font-medium">Enter any address on Scroll. We judge it.</p>
+          <p className="text-zinc-500 mt-4 text-lg md:text-xl font-medium">
+            Enter Scroll (0x...) or Solana Address.
+          </p>
         </motion.div>
 
         {/* MAIN CARD */}
         <motion.div layout className="w-full bg-zinc-900/80 border border-zinc-800 p-8 rounded-3xl backdrop-blur-xl shadow-2xl relative overflow-hidden">
           {!roast ? (
             <>
+              {/* FIXED SEARCH BAR STYLING */}
               <div className="relative mb-6">
-                <Search className="absolute left-5 top-5 text-[#ffce96] w-6 h-6" />
-               <input
-  type="text"
-  placeholder="Paste Address (0x... or Solana)"  
-  className="..." 
-  value={address}
-  onChange={(e) => setAddress(e.target.value)}
-/>
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#ffce96]">
+                   <Search className="w-6 h-6" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Paste Address (e.g. 0x123... or So1a...)"
+                  className="w-full bg-black border-2 border-zinc-800 rounded-2xl py-5 pl-14 pr-4 text-white text-lg focus:outline-none focus:border-[#ffce96] focus:ring-4 focus:ring-[#ffce96]/10 transition-all placeholder:text-zinc-600 font-sans"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
               </div>
               <button
                 onClick={handleRoast}
@@ -157,7 +159,6 @@ export default function Home() {
                 <span className="absolute -bottom-8 -right-2 text-6xl text-zinc-800 font-serif rotate-180">“</span>
               </div>
               
-              {/* BUTTONS ROW */}
               <div className="flex gap-4 justify-center">
                 <button 
                   onClick={reset}

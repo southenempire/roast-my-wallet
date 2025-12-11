@@ -102,10 +102,10 @@ export default function Home() {
       <div className="flex-1 flex flex-col items-center justify-center p-4 z-10 w-full max-w-2xl mx-auto">
         <motion.div initial={{ opacity: 0, y: -30 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-10">
           <div className="inline-flex items-center gap-2 bg-zinc-900 border border-zinc-700 text-zinc-300 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-            <Trophy size={14} className="text-[#ffce96]" /> Scroll Hackathon • Dec 2025
+            <Trophy size={14} className="text-[#ffce96]" /> Secure • no need to connect wallet! 
           </div>
           <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-[#ffce96] drop-shadow-[0_0_35px_rgba(255,206,150,0.4)] leading-[0.85]">
-            Roast My<br/>Scroll
+            Roast My<br/>Wallet
           </h1>
           <p className="text-zinc-500 mt-4 text-lg md:text-xl font-medium">Enter any wallet address. We judge it.</p>
         </motion.div>

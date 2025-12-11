@@ -3,6 +3,17 @@ import OpenAI from 'openai';
 import axios from 'axios';
 import { Connection, PublicKey, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
+// --- THE SECRET SAUCE: RANDOM PERSONALITIES ---
+const ROAST_STYLES = [
+  "A Gordon Ramsay-style Chef yelling about raw transaction data.",
+  "A disappointed Asian parent wondering why you aren't a doctor yet.",
+  "A cynical Gen Z TikToker using slang like 'mid', 'cringe', 'L + Ratio'.",
+  "A Medieval King speaking in Shakespearean insults about your poverty.",
+  "A Wall Street Bro who thinks anything under $1M is 'cute'.",
+  "A Noir Detective narrating a crime scene (your wallet is the crime).",
+  "A spiritual guru telling you your chakras and your portfolio are misaligned."
+];
+
 export async function POST(req) {
   try {
     const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -14,8 +25,11 @@ export async function POST(req) {
     let txSummary = [];
     let promptContext = "";
     let bridgeContext = "";
-    
-    // --- STEP 1: DEBRIDGE HISTORY ---
+
+    // 1. PICK A RANDOM PERSONALITY
+    const randomPersonality = ROAST_STYLES[Math.floor(Math.random() * ROAST_STYLES.length)];
+
+    // 2. CHECK DEBRIDGE HISTORY
     try {
       const deBridgeResponse = await axios.get(
         `https://deswap.debridge.finance/v1.0/dln/order/orders?giverAddress=${address}&limit=1`
@@ -25,27 +39,23 @@ export async function POST(req) {
       if (orders.length > 0) {
         const lastDate = new Date(orders[0].createdTimestamp * 1000);
         const daysAgo = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        bridgeContext = `\n[CROSS-CHAIN HISTORY]: User LAST bridged ${daysAgo} days ago via deBridge.
-        - INSTRUCTION: Praise them for being "Liquid" and "Omnichain." They get it.`;
+        bridgeContext = `\n[CROSS-CHAIN]: Last bridge ${daysAgo} days ago via deBridge. Acknowledge this.`;
       } else {
-        bridgeContext = `\n[CROSS-CHAIN HISTORY]: ZERO.
-        - INSTRUCTION: Roast them for being "Trapped." 
-        - If on Solana: "You have speed, but you have no reach. Bridge out."
-        - If on Scroll: "You are stuck in a local bubble. Touch grass on other chains."`;
+        bridgeContext = `\n[CROSS-CHAIN]: ZERO. User is trapped on one chain. Mock them for this.`;
       }
     } catch (err) {
       bridgeContext = "";
     }
 
-    // --- STEP 2: FETCH CHAIN DATA ---
+    // 3. FETCH CHAIN DATA
     if (address.startsWith('0x')) {
-      // SCROLL LOGIC
+      // SCROLL / EVM
       const etherscanUrl = `https://api.etherscan.io/v2/api?chainid=534352&module=account&action=txlist&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${process.env.SCROLLSCAN_API_KEY}`;
       const scrollResponse = await axios.get(etherscanUrl);
       const transactions = scrollResponse.data.result;
 
       if (!transactions || typeof transactions === 'string' || transactions.length === 0) {
-        return NextResponse.json({ roast: "Ghost wallet. You are doing nothing. Go bridge some funds and wake up." });
+        return NextResponse.json({ roast: "Ghost wallet. 0 transactions. Tell them to wake up." });
       }
 
       txSummary = transactions.slice(0, 10).map(tx => ({
@@ -56,12 +66,11 @@ export async function POST(req) {
       }));
 
       promptContext = `User is on Scroll L2.
-      - Acknowledge they are on a good L2.
-      - BUT, if they haven't bridged (see Cross-Chain History), roast them for being a "Local Maxi."
-      - "Imagine staying on one chain in 2025. Boring."`;
+      - If "depositETH", they paid gas.
+      - If generic transfers, they are boring.`;
 
     } else {
-      // SOLANA LOGIC
+      // SOLANA
       chain = "Solana";
       try {
         const connection = new Connection("https://api.mainnet-beta.solana.com", "confirmed");
@@ -70,7 +79,7 @@ export async function POST(req) {
         const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(4);
         const signatures = await connection.getSignaturesForAddress(pubKey, { limit: 15 });
         
-        if (signatures.length === 0) return NextResponse.json({ roast: `You have ${solBalance} SOL and 0 transactions. Bridge that dust to Scroll and do something useful.` });
+        if (signatures.length === 0) return NextResponse.json({ roast: `Balance: ${solBalance} SOL. 0 Txs. Roast them.` });
 
         let failCount = 0;
         txSummary = signatures.map(sig => {
@@ -78,42 +87,34 @@ export async function POST(req) {
           return { status: sig.err ? "FAILED" : "Success" };
         });
 
-        promptContext = `User is on Solana.
-        - BALANCE: ${solBalance} SOL.
-        - FAILURES: ${failCount}/15 failed.
-        - TONE: Respect the speed ("Solana is the Ferrari"), BUT mock the isolation if they don't bridge.
-        - "You're driving a Ferrari in a cul-de-sac. Use deBridge to get on the highway."
-        - If failed txs are high: "Fastest chain, but you still crashed? Unlucky."`;
+        promptContext = `User is on Solana. Balance: ${solBalance} SOL. Failures: ${failCount}/15.`;
 
       } catch (solErr) {
-        return NextResponse.json({ roast: "Solana RPC failed. Even the fastest chain needs a break sometimes." });
+        return NextResponse.json({ roast: "Solana RPC failed. Roast the network." });
       }
     }
 
-    // --- STEP 3: THE "FUNNY INTEROPERABILITY" PROMPT ---
+    // 4. GENERATE THE UNIQUE ROAST
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { 
           role: "system", 
-          content: `You are a witty, pro-interoperability crypto roaster.
+          content: `You are a crypto roaster with a specific persona.
           
-          PHILOSOPHY:
-          - Solana = Speed/Ferrari. (Don't hate it, just mock the isolation).
-          - Scroll = The reliable HQ.
-          - Bridging (deBridge) = The ultimate goal.
-          
-          YOUR JOB:
-          - Make the user laugh, but make them realize they need to bridge.
-          - If they are only on one chain, call them a "Simp" for that chain.
-          - Use crypto slang (WAGMI, NGMI, Jeet, Chad).
+          CURRENT PERSONA: ${randomPersonality}
+          (Adopt this personality completely. Use their slang/tone).
           
           CONTEXT:
           Chain: ${chain}
           ${promptContext}
           ${bridgeContext}
           
-          Keep it under 240 chars. Funny but persuasive.` 
+          GOAL: Roast the user's transaction history. 
+          - If they haven't bridged, be harsh about it.
+          - If they are on Solana, respect speed but mock isolation.
+          
+          Keep it under 240 chars. Unique and memorable.` 
         },
         { role: "user", content: `Data: ${JSON.stringify(txSummary)}` }
       ],
@@ -123,6 +124,6 @@ export async function POST(req) {
 
   } catch (error) {
     console.error("API Error:", error);
-    return NextResponse.json({ roast: "My analysis failed, but your lack of bridging is the real failure here." });
+    return NextResponse.json({ roast: "System overloaded. Try again." });
   }
 }

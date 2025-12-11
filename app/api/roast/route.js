@@ -15,7 +15,7 @@ export async function POST(req) {
     let promptContext = "";
     let bridgeContext = "";
     
-    // --- STEP 1: DEBRIDGE HISTORY (The "Truth" Check) ---
+    // --- STEP 1: DEBRIDGE HISTORY ---
     try {
       const deBridgeResponse = await axios.get(
         `https://deswap.debridge.finance/v1.0/dln/order/orders?giverAddress=${address}&limit=1`
@@ -25,13 +25,13 @@ export async function POST(req) {
       if (orders.length > 0) {
         const lastDate = new Date(orders[0].createdTimestamp * 1000);
         const daysAgo = Math.floor((Date.now() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        bridgeContext = `\n[CROSS-CHAIN HISTORY]: User LAST bridged ${daysAgo} days ago.
-        - INSTRUCTION: If > 30 days, shame them for letting their capital rot on one chain. "Liquidity has to move to grow."
-        - If < 7 days, nod respectfully but tell them to keep the velocity up.`;
+        bridgeContext = `\n[CROSS-CHAIN HISTORY]: User LAST bridged ${daysAgo} days ago via deBridge.
+        - INSTRUCTION: Praise them for being "Liquid" and "Omnichain." They get it.`;
       } else {
-        bridgeContext = `\n[CROSS-CHAIN HISTORY]: ZERO. NONE.
-        - This user is a "Chain Isolationist." They have NEVER used deBridge.
-        - INSTRUCTION: Attack this mindset. Ask them if they enjoy being trapped. Tell them real yield is cross-chain.`;
+        bridgeContext = `\n[CROSS-CHAIN HISTORY]: ZERO.
+        - INSTRUCTION: Roast them for being "Trapped." 
+        - If on Solana: "You have speed, but you have no reach. Bridge out."
+        - If on Scroll: "You are stuck in a local bubble. Touch grass on other chains."`;
       }
     } catch (err) {
       bridgeContext = "";
@@ -45,7 +45,7 @@ export async function POST(req) {
       const transactions = scrollResponse.data.result;
 
       if (!transactions || typeof transactions === 'string' || transactions.length === 0) {
-        return NextResponse.json({ roast: "Zero history? You're not a user, you're a database entry. Bridge some ETH and wake up." });
+        return NextResponse.json({ roast: "Ghost wallet. You are doing nothing. Go bridge some funds and wake up." });
       }
 
       txSummary = transactions.slice(0, 10).map(tx => ({
@@ -56,8 +56,9 @@ export async function POST(req) {
       }));
 
       promptContext = `User is on Scroll L2.
-      - If they only do simple transfers, tell them they are wasting the L2 potential.
-      - Tell them to use their cheap gas to BRIDGE assets and arb opportunities on other chains.`;
+      - Acknowledge they are on a good L2.
+      - BUT, if they haven't bridged (see Cross-Chain History), roast them for being a "Local Maxi."
+      - "Imagine staying on one chain in 2025. Boring."`;
 
     } else {
       // SOLANA LOGIC
@@ -69,7 +70,7 @@ export async function POST(req) {
         const solBalance = (balance / LAMPORTS_PER_SOL).toFixed(4);
         const signatures = await connection.getSignaturesForAddress(pubKey, { limit: 15 });
         
-        if (signatures.length === 0) return NextResponse.json({ roast: `You have ${solBalance} SOL and 0 transactions. Your capital is stagnant. Bridge it to Scroll and put it to work.` });
+        if (signatures.length === 0) return NextResponse.json({ roast: `You have ${solBalance} SOL and 0 transactions. Bridge that dust to Scroll and do something useful.` });
 
         let failCount = 0;
         txSummary = signatures.map(sig => {
@@ -80,35 +81,39 @@ export async function POST(req) {
         promptContext = `User is on Solana.
         - BALANCE: ${solBalance} SOL.
         - FAILURES: ${failCount}/15 failed.
-        - INSTRUCTION: Use the failures as proof they need to leave. "Why stay on a chain that halts? Bridge to Scroll for uptime."`;
+        - TONE: Respect the speed ("Solana is the Ferrari"), BUT mock the isolation if they don't bridge.
+        - "You're driving a Ferrari in a cul-de-sac. Use deBridge to get on the highway."
+        - If failed txs are high: "Fastest chain, but you still crashed? Unlucky."`;
 
       } catch (solErr) {
-        return NextResponse.json({ roast: "Solana RPC failed. See? If you were on Scroll, this wouldn't happen. Bridge now." });
+        return NextResponse.json({ roast: "Solana RPC failed. Even the fastest chain needs a break sometimes." });
       }
     }
 
-    // --- STEP 3: THE "TOUGH LOVE" PROMPT ---
+    // --- STEP 3: THE "FUNNY INTEROPERABILITY" PROMPT ---
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         { 
           role: "system", 
-          content: `You are an aggressive DeFi Interoperability Coach. 
-          Your philosophy: "Static capital is dead capital."
+          content: `You are a witty, pro-interoperability crypto roaster.
           
-          Your Goal: Bully the user into bridging funds and becoming a cross-chain active user.
+          PHILOSOPHY:
+          - Solana = Speed/Ferrari. (Don't hate it, just mock the isolation).
+          - Scroll = The reliable HQ.
+          - Bridging (deBridge) = The ultimate goal.
           
-          TONE:
-          - Do not be "funny" or "clownish." Be harsh, direct, and factual.
-          - Use words like "Inefficient," "Stagnant," "Trapped," "Isolated."
-          - Advocating for: Scroll Ecosystem and deBridge infrastructure.
+          YOUR JOB:
+          - Make the user laugh, but make them realize they need to bridge.
+          - If they are only on one chain, call them a "Simp" for that chain.
+          - Use crypto slang (WAGMI, NGMI, Jeet, Chad).
           
           CONTEXT:
           Chain: ${chain}
           ${promptContext}
           ${bridgeContext}
           
-          Keep it under 240 chars. Make it hurt, but make it true.` 
+          Keep it under 240 chars. Funny but persuasive.` 
         },
         { role: "user", content: `Data: ${JSON.stringify(txSummary)}` }
       ],

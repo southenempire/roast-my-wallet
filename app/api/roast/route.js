@@ -2,13 +2,20 @@ import { NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import axios from 'axios';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// REMOVED: const openai = ... (This caused the crash)
 
 export async function POST(req) {
   try {
+    // FIX: Initialize OpenAI inside the function so it doesn't crash the build
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+
     const { address } = await req.json();
+
+    if (!address) {
+      return NextResponse.json({ error: "No address provided" }, { status: 400 });
+    }
 
     // 1. Fetch Real History from Scroll
     const scrollResponse = await axios.get(
@@ -17,7 +24,7 @@ export async function POST(req) {
 
     const transactions = scrollResponse.data.result;
 
-    // Handle empty wallets
+    // Handle empty wallets or errors
     if (!transactions || typeof transactions === 'string' || transactions.length === 0) {
       return NextResponse.json({ roast: "This wallet is a ghost town. 0 transactions? Are you hiding from the IRS or just boring?" });
     }
@@ -31,7 +38,7 @@ export async function POST(req) {
 
     // 3. Ask AI to Roast it
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini", // Fast & Cheap
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -49,6 +56,7 @@ export async function POST(req) {
 
   } catch (error) {
     console.error("API Error:", error);
+    // Return a fallback roast so the app doesn't break
     return NextResponse.json({ roast: "The blockchain is congested, but you still look like a noob. (API Error)" });
   }
 }

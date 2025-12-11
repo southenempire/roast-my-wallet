@@ -128,13 +128,13 @@ export default function Home() {
             <>
               <div className="relative mb-6">
                 <Search className="absolute left-5 top-5 text-[#ffce96] w-6 h-6" />
-                <input
-                  type="text"
-                  placeholder="Paste Address (e.g. 0x123...)"
-                  className="w-full bg-black border-2 border-zinc-800 rounded-2xl py-5 pl-14 pr-4 text-white text-lg focus:outline-none focus:border-[#ffce96] focus:ring-4 focus:ring-[#ffce96]/10 transition-all placeholder:text-zinc-600 font-sans"
-                  value={address}
-                  onChange={(e) => setAddress(e.target.value)}
-                />
+               <input
+  type="text"
+  placeholder="Paste Address (0x... or Solana)"  
+  className="..." 
+  value={address}
+  onChange={(e) => setAddress(e.target.value)}
+/>
               </div>
               <button
                 onClick={handleRoast}

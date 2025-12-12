@@ -3,12 +3,11 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
 export default function BridgePage() {
-  // We embed the official deSwap app via Iframe.
-  // URL Params explain:
-  // inputChain=1 (Ethereum Mainnet)
-  // outputChain=534352 (Scroll Mainnet)
-  // mode=deswap (Standard Bridge Mode)
-  const BRIDGE_URL = "https://app.debridge.finance/deswap?inputChain=1&outputChain=534352&mode=deswap";
+  // SWITCHED TO JUMPER (LI.FI)
+  // toChain=534352 (Scroll)
+  // toToken=0x0000000000000000000000000000000000000000 (Native ETH)
+  // theme=dark
+  const BRIDGE_URL = "https://jumper.exchange/?toChain=534352&toToken=0x0000000000000000000000000000000000000000&theme=dark";
 
   return (
     <main className="min-h-screen bg-black text-[#ffce96] font-mono flex flex-col items-center p-4 relative overflow-hidden">
@@ -27,11 +26,10 @@ export default function BridgePage() {
         </div>
       </div>
 
-      {/* 3. The deBridge Iframe Container */}
-      {/* We use a tall height (750px) to ensure the swap UI fits perfectly without double scrollbars */}
+      {/* 3. The Jumper Iframe Container */}
       <div className="z-10 w-full max-w-[480px] h-[750px] bg-[#121212] border border-zinc-800 rounded-3xl overflow-hidden shadow-[0_0_50px_rgba(255,206,150,0.1)] relative">
         
-        {/* Loading Spinner Layer (Hidden once iframe loads) */}
+        {/* Loading Spinner */}
         <div className="absolute inset-0 flex items-center justify-center -z-10">
           <div className="animate-spin h-8 w-8 border-4 border-[#ffce96] border-t-transparent rounded-full"></div>
         </div>
@@ -41,15 +39,15 @@ export default function BridgePage() {
           width="100%" 
           height="100%" 
           style={{ border: 'none' }}
-          title="deBridge Widget"
-          allow="clipboard-write" // Allows users to copy addresses inside the widget
+          title="Jumper Widget"
+          allow="clipboard-write"
         />
       </div>
 
       {/* 4. Footer Trust Badge */}
       <p className="z-10 mt-6 text-zinc-600 text-[10px] uppercase tracking-widest text-center max-w-sm">
-        Powered by <span className="text-white font-bold">deBridge DLN</span>. <br/>
-        Zero Slippage • MEV Protected
+        Powered by <span className="text-white font-bold">Jumper (Li.Fi)</span>. <br/>
+        Aggregating Orbiter, Across & Stargate.
       </p>
     </main>
   );

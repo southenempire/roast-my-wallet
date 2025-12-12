@@ -201,7 +201,7 @@ export default function Home() {
         <div className="mt-12 flex items-center justify-center gap-6 text-zinc-600 text-xs font-bold uppercase tracking-widest">
            <span>• Scroll Mainnet</span>
            <span>• Solana</span>
-           <span>• deBridge API</span>
+           <span>• LiFi</span>
         </div>
       </div>
     </main>
